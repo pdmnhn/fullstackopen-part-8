@@ -165,7 +165,7 @@ const resolvers = {
 
     editAuthor: (root, args) => {
       authors = authors.map((author) =>
-        author.name === args.name ? args : author
+        author.name === args.name ? { ...args, id: author.id } : author
       );
 
       const bookCount = books.reduce(
@@ -173,12 +173,13 @@ const resolvers = {
         0
       );
 
-      const book = authors.find((author) => author.name === args.name);
-      if (!book) {
+      const author = authors.find((author) => author.name === args.name);
+
+      if (!author) {
         return null;
       }
-      book.bookCount = bookCount;
-      return book;
+      author.bookCount = bookCount;
+      return author;
     },
   },
 };
