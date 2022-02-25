@@ -138,9 +138,9 @@ const resolvers = {
       if (!currentUser) {
         throw new AuthenticationError("User not signed in");
       }
-      const author = await Author.find({ name: args.name });
+      const author = await Author.findOne({ name: args.name });
       if (!author) {
-        return null;
+        throw new UserInputError("Author doesn't exist", { invalidArgs: args });
       }
       author.born = args.born;
       await resolvePromise({
@@ -156,30 +156,29 @@ const resolvers = {
 
       return author;
     },
-  },
-
-  createUser: async (root, args) => {
-    const user = new User({ ...args });
-    await resolvePromise({
-      promise: user.save(),
-      errorType: UserInputError,
-      message: "Invalid username",
-      args,
-    });
-    return user;
-  },
-
-  login: async (root, args) => {
-    const user = await User.findOne({ username: args.username });
-    if (!user) {
-      throw new UserInputError("No user with the username exists", {
-        invalidArgs: arg,
+    createUser: async (root, args) => {
+      const user = new User({ ...args });
+      await resolvePromise({
+        promise: user.save(),
+        errorType: UserInputError,
+        message: "Invalid username",
+        args,
       });
-    }
-    if (args.password != process.env.PASSWORD) {
-      throw new AuthenticationError("Invalid password");
-    }
-    return { value: jwt.sign({ ...user }) };
+      return user;
+    },
+
+    login: async (root, args) => {
+      const user = await User.findOne({ username: args.username });
+      if (!user) {
+        throw new UserInputError("No user with the username exists", {
+          invalidArgs: arg,
+        });
+      }
+      if (args.password != process.env.PASSWORD) {
+        throw new AuthenticationError("Invalid password");
+      }
+      return { value: jwt.sign({ ...user }) };
+    },
   },
 };
 
