@@ -92,7 +92,24 @@ const resolvers = {
       return await Author.collection.countDocuments();
     },
     allBooks: async (root, args) => {
-      return await Book.find({}).populate("author");
+      const filter = {};
+      if (args.genre) {
+        filter.genres = args.genre;
+      }
+      if (args.author) {
+        const author = await Author.findOne({ name: args.author });
+        filter.author = author ? author._id.toString() : null;
+      }
+
+      const books = await Book.find(filter).populate("author");
+
+      for (const book of books) {
+        book.author.bookCount = await Book.find({
+          author: { $in: book.author._id.toString() },
+        }).count();
+      }
+
+      return books;
     },
     allAuthors: async () => {
       const authors = await Author.find({});
@@ -109,7 +126,7 @@ const resolvers = {
   },
 
   Mutation: {
-    addBook: async (root, args) => {
+    addBook: async (root, args, { currentUser }) => {
       if (!currentUser) {
         throw new AuthenticationError("User not signed in");
       }
@@ -177,7 +194,16 @@ const resolvers = {
       if (args.password != process.env.PASSWORD) {
         throw new AuthenticationError("Invalid password");
       }
-      return { value: jwt.sign({ ...user }) };
+      return {
+        value: jwt.sign(
+          {
+            id: user._id,
+            username: user.username,
+            favoriteGenre: user.favoriteGenre,
+          },
+          process.env.JWT_SECRET
+        ),
+      };
     },
   },
 };

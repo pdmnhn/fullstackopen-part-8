@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@apollo/client";
 import { EDIT_AUTHOR, ALL_AUTHORS, ALL_BOOKS } from "../queries";
 
 const EditAuthor = ({ result }) => {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(result.data.allAuthors[0]?.name);
   const [born, setBorn] = useState("");
 
   const [editAuthor] = useMutation(EDIT_AUTHOR, {
@@ -16,8 +16,8 @@ const EditAuthor = ({ result }) => {
 
   const submit = (event) => {
     event.preventDefault();
-    editAuthor({ variables: { name, born } });
-    setName("");
+    editAuthor({ variables: { name, born: Number(born) } });
+    setName(result.data.allAuthors[0]?.name);
     setBorn("");
   };
 
@@ -48,7 +48,7 @@ const EditAuthor = ({ result }) => {
             value={born}
             type="number"
             onChange={(event) => {
-              setBorn(Number(event.target.value));
+              setBorn(event.target.value);
             }}
           />
         </div>
