@@ -11,35 +11,49 @@ export const ALL_AUTHORS = gql`
   }
 `;
 
+const BOOK_DETAILS = gql`
+  fragment BookDetails on Book {
+    title
+    author {
+      name
+      born
+      bookCount
+      id
+    }
+    published
+    genres
+    id
+  }
+`;
+
 export const ALL_BOOKS = gql`
   query {
     allBooks {
-      title
-      author {
-        name
-      }
-      published
-      genres
-      id
+      ...BookDetails
     }
   }
+
+  ${BOOK_DETAILS}
 `;
 
 export const ALL_BOOKS_BY_GENRE = gql`
   query allBooks($genre: String) {
     allBooks(genre: $genre) {
-      title
-      author {
-        name
-        born
-        bookCount
-        id
-      }
-      published
-      genres
-      id
+      ...BookDetails
     }
   }
+
+  ${BOOK_DETAILS}
+`;
+
+export const BOOK_ADDED = gql`
+  subscription {
+    bookAdded {
+      ...BookDetails
+    }
+  }
+
+  ${BOOK_DETAILS}
 `;
 
 export const ME = gql`

@@ -1,16 +1,28 @@
 import { useEffect, useState } from "react";
-import { useApolloClient } from "@apollo/client";
+import { useApolloClient, useSubscription } from "@apollo/client";
+
 import Authors from "./components/Authors";
 import Books from "./components/Books";
 import Recommend from "./components/Recommend";
 import NewBook from "./components/NewBook";
 import Login from "./components/Login";
 
+import { ALL_BOOKS, BOOK_ADDED } from "./queries";
+
 const App = () => {
   const [page, setPage] = useState("authors");
   const [token, setToken] = useState(null);
   const [loginVisible, setLoginVisible] = useState(true);
   const client = useApolloClient();
+
+  useSubscription(BOOK_ADDED, {
+    onSubscriptionData: ({ subscriptionData }) => {
+      alert(`${subscriptionData.data.bookAdded.title} added!`);
+      client.cache.updateQuery({ query: ALL_BOOKS }, ({ allBooks }) => {
+        return { allBooks: allBooks.concat(subscriptionData.data.bookAdded) };
+      });
+    },
+  });
 
   useEffect(() => {
     if (token) {
