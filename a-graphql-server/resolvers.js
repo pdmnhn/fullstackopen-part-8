@@ -27,6 +27,7 @@ const resolvers = {
     authorCount: async () => {
       return await Author.collection.countDocuments();
     },
+
     allBooks: async (root, args) => {
       const filter = {};
       if (args.genre) {
@@ -38,21 +39,16 @@ const resolvers = {
       }
 
       const books = await Book.find(filter).populate("author");
-
       for (const book of books) {
-        book.author.bookCount = await Book.find({
-          author: { $in: book.author._id.toString() },
-        }).count();
+        book.author.bookCount = book.author.books.length;
       }
-
       return books;
     },
+
     allAuthors: async () => {
       const authors = await Author.find({});
       for (const author of authors) {
-        author.bookCount = await Book.find({
-          author: { $in: author._id.toString() },
-        }).count();
+        author.bookCount = author.books.length;
       }
       return authors;
     },
@@ -84,6 +80,10 @@ const resolvers = {
         args,
         message: "Invalid title",
       });
+      author.books.push(book);
+      await author.save();
+
+      book.author.bookCount = book.author.books.length;
 
       pubsub.publish("BOOK_ADDED", { bookAdded: book });
 
